@@ -26,7 +26,7 @@ public class PlayerController : MonoBehaviour
     private bool isDead = false;
 
     private float score = 0;
-    private SpriteRenderer shipRenderer;
+    private ProceduralShape shipShape;
 
     private VisualElement root;
     private Button restartButton;
@@ -38,10 +38,12 @@ public class PlayerController : MonoBehaviour
     {
         Application.targetFrameRate = -1;
         rb = GetComponent<Rigidbody2D>();
-        shipRenderer = GetComponent<SpriteRenderer>();
+        Color startColor = PaletteManager.Instance != null
+            ? PaletteManager.Instance.PlayerColor
+            : new Color(0.98f, 0.89f, 0.63f);
 
-        if (shipRenderer != null && PaletteManager.Instance != null)
-            shipRenderer.color = PaletteManager.Instance.PlayerColor;
+        shipShape = GetComponent<ProceduralShape>() ?? gameObject.AddComponent<ProceduralShape>();
+        shipShape.Initialize(ProceduralShape.ShapeType.Arrow, startColor);
 
         PaletteManager.OnPaletteChanged += OnPaletteChanged;
 
@@ -191,21 +193,21 @@ public class PlayerController : MonoBehaviour
 
     void OnPaletteChanged()
     {
-        if (shipRenderer != null && PaletteManager.Instance != null)
+        if (shipShape != null && PaletteManager.Instance != null)
             StartCoroutine(TransitionPlayerColor(PaletteManager.Instance.PlayerColor));
     }
 
     IEnumerator TransitionPlayerColor(Color target)
     {
-        Color start = shipRenderer.color;
+        Color start = shipShape.CurrentColor;
         float t = 0f;
         while (t < 1f)
         {
             t += Time.unscaledDeltaTime * 1.5f;
-            shipRenderer.color = Color.Lerp(start, target, t);
+            shipShape.SetColor(Color.Lerp(start, target, Mathf.Clamp01(t)));
             yield return null;
         }
-        shipRenderer.color = target;
+        shipShape.SetColor(target);
     }
 
     void RestartGame()

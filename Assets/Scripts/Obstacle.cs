@@ -27,11 +27,13 @@ public class Obstacle : MonoBehaviour
         float randomTorque = Random.Range(-maxSpinSpeed, maxSpinSpeed);
         rb.AddTorque(randomTorque);
 
-        if (PaletteManager.Instance != null)
-        {
-            SpriteRenderer sr = GetComponent<SpriteRenderer>();
-            if (sr != null) sr.color = PaletteManager.Instance.ObstacleColor;
-        }
+        Color obstacleColor = PaletteManager.Instance != null
+            ? PaletteManager.Instance.ObstacleColor
+            : Color.white;
+
+        ProceduralShape ps = gameObject.GetComponent<ProceduralShape>()
+                          ?? gameObject.AddComponent<ProceduralShape>();
+        ps.Initialize(ProceduralShape.RandomPolygon(), obstacleColor);
     }
 
     // Usiamo FixedUpdate perché lavoriamo con la fisica (Rigidbody2D)
