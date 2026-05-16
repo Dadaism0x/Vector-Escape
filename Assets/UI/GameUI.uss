@@ -1,0 +1,137 @@
+/* ── Score ───────────────────────────────────── */
+
+#ScoreContainer {
+    align-self: center;
+    margin-top: 12px;
+    align-items: center;
+    background-color: rgba(12, 6, 28, 0.65);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 3px;
+    padding-bottom: 4px;
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(203, 166, 243, 0.45);
+}
+
+#ScoreTitle {
+    font-size: 8px;
+    color: rgba(180, 145, 225, 0.55);
+    -unity-font-style: bold;
+    -unity-text-align: upper-center;
+    align-self: center;
+}
+
+#ScoreLabel {
+    font-size: 20px;
+    color: rgb(220, 195, 255);
+    -unity-font-style: bold;
+    -unity-text-align: upper-center;
+    align-self: center;
+}
+
+/* ── Leaderboard ─────────────────────────────── */
+
+#LeaderboardContainer {
+    position: absolute;
+    top: 12%;
+    right: 2%;
+    background-color: rgba(10, 5, 24, 0.92);
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    border-left-color: rgba(160, 120, 240, 0.45);
+    border-right-color: rgba(160, 120, 240, 0.45);
+    border-bottom-color: rgba(160, 120, 240, 0.45);
+    border-top-color: rgb(203, 166, 243);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-top-width: 3px;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 8px;
+    padding-bottom: 10px;
+    width: 130px;
+    align-items: stretch;
+}
+
+#LeaderboardTitle {
+    font-size: 9px;
+    color: rgb(220, 232, 148);
+    -unity-font-style: bold;
+    -unity-text-align: upper-center;
+    align-self: center;
+    margin-bottom: 0;
+}
+
+.lb-separator {
+    height: 1px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    background-color: rgba(160, 120, 240, 0.35);
+}
+
+.lb-entry {
+    font-size: 12px;
+    color: rgb(160, 130, 210);
+    -unity-font-style: bold;
+    -unity-text-align: upper-left;
+    margin-bottom: 2px;
+}
+
+/* ── Restart button ───────────────────────────── */
+
+#RestartButton {
+    position: absolute;
+    top: 65%;
+    align-self: center;
+    background-color: rgba(18, 10, 38, 0.88);
+    border-left-color: rgb(180, 140, 255);
+    border-right-color: rgb(180, 140, 255);
+    border-top-color: rgb(180, 140, 255);
+    border-bottom-color: rgb(180, 140, 255);
+    border-top-width: 2px;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+    border-left-width: 2px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+    border-bottom-left-radius: 12px;
+    color: rgb(210, 185, 255);
+    font-size: 17px;
+    -unity-font-style: bold;
+    padding-left: 36px;
+    padding-right: 36px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    transition-property: background-color, border-left-color, border-right-color, border-top-color, border-bottom-color, color;
+    transition-duration: 0.15s, 0.15s, 0.15s, 0.15s, 0.15s, 0.15s;
+    transition-timing-function: ease, ease, ease, ease, ease, ease;
+}
+
+#RestartButton:hover {
+    background-color: rgba(70, 40, 130, 0.92);
+    border-left-color: rgb(230, 210, 255);
+    border-right-color: rgb(230, 210, 255);
+    border-top-color: rgb(230, 210, 255);
+    border-bottom-color: rgb(230, 210, 255);
+    color: rgb(240, 230, 255);
+}
+
+#RestartButton:active {
+    background-color: rgba(40, 20, 80, 0.95);
+    border-left-color: rgb(150, 110, 220);
+    border-right-color: rgb(150, 110, 220);
+    border-top-color: rgb(150, 110, 220);
+    border-bottom-color: rgb(150, 110, 220);
+    color: rgb(180, 155, 230);
+}

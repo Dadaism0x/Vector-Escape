@@ -1,5 +1,17 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <ui:Label text=" Score: 0 " name="ScoreLabel" style="font-size: 20px; color: rgb(203, 166, 243); -unity-text-align: upper-center; -unity-text-outline-color: rgb(255, 255, 255); border-left-color: rgb(203, 166, 243); border-right-color: rgb(203, 166, 243); border-top-color: rgb(203, 166, 243); border-bottom-color: rgb(203, 166, 243); border-top-width: 2px; border-right-width: 2px; border-bottom-width: 2px; border-left-width: 2px; border-top-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px; border-bottom-left-radius: 10px; align-content: auto; margin-top: 20px; align-items: center; margin-left: 4px; left: auto; right: auto; position: relative; align-self: center; -unity-background-image-tint-color: rgb(203, 166, 243); background-color: rgba(159, 112, 209, 0.28); -unity-font-style: bold; top: initial; padding-left: 15px; padding-right: 18px; justify-content: space-between;"/>
-    <ui:Button text="Restart" name="RestartButton" style="position: absolute; top: 60%; align-self: center; font-size: 20px; background-color: rgba(85, 115, 183, 0.78); -unity-text-outline-color: rgb(0, 0, 0); color: rgb(177, 191, 250); border-left-color: rgb(40, 78, 166); border-right-color: rgb(40, 78, 166); border-top-color: rgb(40, 78, 166); border-bottom-color: rgb(40, 78, 166); border-top-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px; border-bottom-left-radius: 10px; -unity-font-style: bold; justify-content: space-between; align-items: center; bottom: auto;"/>
-    <ui:Label text="High Score: 0" name="HighScoreLabel" style="font-size: 15px; top: 0%; align-self: center; color: rgb(232, 243, 166); -unity-text-outline-color: rgb(255, 255, 255); border-left-color: rgb(232, 243, 166); border-right-color: rgb(232, 243, 166); border-top-color: rgb(232, 243, 166); border-bottom-color: rgb(232, 243, 166); border-top-width: 2px; border-right-width: 2px; border-bottom-width: 2px; border-left-width: 2px; border-top-left-radius: 10px; border-top-right-radius: 10px; border-bottom-right-radius: 10px; border-bottom-left-radius: 10px; background-color: rgba(190, 145, 101, 0.31); -unity-font-style: bold; padding-left: 5px; padding-right: 5px; justify-content: space-around; align-items: center; -unity-text-align: upper-center; bottom: auto; padding-top: 4px; margin-top: 4px; align-content: auto;"/>
+    <Style src="GameUI.uss" />
+    <ui:VisualElement name="ScoreContainer">
+        <ui:Label text="SCORE" name="ScoreTitle" />
+        <ui:Label text="0" name="ScoreLabel" />
+    </ui:VisualElement>
+    <ui:VisualElement name="LeaderboardContainer">
+        <ui:Label text="BEST SCORES" name="LeaderboardTitle" />
+        <ui:VisualElement class="lb-separator" />
+        <ui:Label text="1.  —" name="LB_0" class="lb-entry" />
+        <ui:Label text="2.  —" name="LB_1" class="lb-entry" />
+        <ui:Label text="3.  —" name="LB_2" class="lb-entry" />
+        <ui:Label text="4.  —" name="LB_3" class="lb-entry" />
+        <ui:Label text="5.  —" name="LB_4" class="lb-entry" style="margin-bottom: 0;"/>
+    </ui:VisualElement>
+    <ui:Button text="PLAY AGAIN" name="RestartButton" />
 </ui:UXML>

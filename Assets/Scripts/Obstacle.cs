@@ -15,20 +15,23 @@ public class Obstacle : MonoBehaviour
 
     void Start()
     {
-        // 1. Gestione dimensione casuale
         float randomSize = Random.Range(minSize, maxSize);
         transform.localScale = new Vector3(randomSize, randomSize, 1);
 
         rb = GetComponent<Rigidbody2D>();
 
-        // 2. Applicazione forza iniziale
-        Vector2 randomDirection = Random.insideUnitCircle.normalized; // normalized per direzione uniforme
+        Vector2 randomDirection = Random.insideUnitCircle.normalized;
         float randomSpeed = Random.Range(minSpeed, maxSpeed) / randomSize;
         rb.AddForce(randomDirection * randomSpeed);
 
-        // 3. Rotazione casuale
         float randomTorque = Random.Range(-maxSpinSpeed, maxSpinSpeed);
         rb.AddTorque(randomTorque);
+
+        if (PaletteManager.Instance != null)
+        {
+            SpriteRenderer sr = GetComponent<SpriteRenderer>();
+            if (sr != null) sr.color = PaletteManager.Instance.ObstacleColor;
+        }
     }
 
     // Usiamo FixedUpdate perché lavoriamo con la fisica (Rigidbody2D)
