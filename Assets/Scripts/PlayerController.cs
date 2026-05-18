@@ -23,6 +23,7 @@ public class PlayerController : MonoBehaviour
     public InputAction lookPosition;
 
     private Rigidbody2D rb;
+    private Camera mainCamera;
     private Vector2 moveDirection;
     private bool isHit = false;
     private bool isDead = false;
@@ -74,7 +75,8 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         Application.targetFrameRate = -1;
-        rb = GetComponent<Rigidbody2D>();
+        rb         = GetComponent<Rigidbody2D>();
+        mainCamera = Camera.main;
         Color startColor = PaletteManager.Instance != null
             ? PaletteManager.Instance.PlayerColor
             : new Color(0.98f, 0.89f, 0.63f);
@@ -542,15 +544,15 @@ public class PlayerController : MonoBehaviour
 
     void ScreenWrap()
     {
-        Vector3 pos = transform.position;
-        float height = Camera.main.orthographicSize;
-        float width  = height * Camera.main.aspect;
+        Vector2 pos = rb.position;
+        Vector3 min = mainCamera.ViewportToWorldPoint(Vector3.zero);
+        Vector3 max = mainCamera.ViewportToWorldPoint(Vector3.one);
 
-        if      (pos.x >  width)  pos.x = -width;
-        else if (pos.x < -width)  pos.x =  width;
-        if      (pos.y >  height) pos.y = -height;
-        else if (pos.y < -height) pos.y =  height;
+        if      (pos.x > max.x) pos.x = min.x;
+        else if (pos.x < min.x) pos.x = max.x;
+        if      (pos.y > max.y) pos.y = min.y;
+        else if (pos.y < min.y) pos.y = max.y;
 
-        transform.position = pos;
+        rb.position = pos;
     }
 }
