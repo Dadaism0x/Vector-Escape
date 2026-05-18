@@ -1,17 +1,26 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="GameUI.uss" />
+
     <ui:VisualElement name="ScoreContainer">
         <ui:Label text="SCORE" name="ScoreTitle" />
         <ui:Label text="0" name="ScoreLabel" />
     </ui:VisualElement>
-    <ui:VisualElement name="LeaderboardContainer">
-        <ui:Label text="BEST SCORES" name="LeaderboardTitle" />
-        <ui:VisualElement class="lb-separator" />
-        <ui:Label text="1.  —" name="LB_0" class="lb-entry" />
-        <ui:Label text="2.  —" name="LB_1" class="lb-entry" />
-        <ui:Label text="3.  —" name="LB_2" class="lb-entry" />
-        <ui:Label text="4.  —" name="LB_3" class="lb-entry" />
-        <ui:Label text="5.  —" name="LB_4" class="lb-entry" style="margin-bottom: 0;"/>
+
+    <ui:VisualElement name="GameOverOverlay">
+        <ui:VisualElement name="GameOverCard">
+            <ui:Label text="GAME OVER" name="GameOverTitle" />
+            <ui:Label text="0" name="FinalScore" />
+            <ui:VisualElement name="CardDivider" />
+            <ui:VisualElement name="LeaderboardRows" />
+            <ui:Button text="PLAY AGAIN" name="RestartButton" />
+            <ui:Button text="CHANGE NAME" name="ChangeNameButton" />
+        </ui:VisualElement>
     </ui:VisualElement>
-    <ui:Button text="PLAY AGAIN" name="RestartButton" />
+
+    <ui:VisualElement name="StartOverlay">
+        <ui:Label text="VECTOR ESCAPE" name="GameTitle" />
+        <ui:Label text="ENTER YOUR NAME" name="NamePrompt" />
+        <ui:TextField label="" name="NicknameField" max-length="12" />
+        <ui:Button text="PLAY" name="StartButton" />
+    </ui:VisualElement>
 </ui:UXML>
