@@ -111,10 +111,11 @@ public class PlayerController : MonoBehaviour
             if (nicknameField != null)
             {
                 nicknameField.value = PlayerPrefs.GetString("PlayerNickname", "");
+                // TrickleDown: su WebGL l'evento Enter può essere consumato prima di raggiungere il callback normale
                 nicknameField.RegisterCallback<KeyDownEvent>(evt => {
                     if (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter)
                         OnStartButtonClicked();
-                });
+                }, TrickleDown.TrickleDown);
             }
 
             if (startButton != null)
@@ -137,6 +138,7 @@ public class PlayerController : MonoBehaviour
         {
             Time.timeScale = 0f;
             Time.fixedDeltaTime = 0f;
+            FocusNicknameField();
         }
     }
 
@@ -372,6 +374,14 @@ public class PlayerController : MonoBehaviour
         if (scoreContainer != null)   scoreContainer.style.display   = DisplayStyle.None;
         if (nicknameField != null)    nicknameField.value = PlayerPrefs.GetString("PlayerNickname", "");
         if (startOverlay != null)     startOverlay.style.display     = DisplayStyle.Flex;
+        FocusNicknameField();
+    }
+
+    void FocusNicknameField()
+    {
+        if (nicknameField == null) return;
+        // Piccolo delay: su WebGL il layout deve essere calcolato prima che Focus() funzioni
+        nicknameField.schedule.Execute(() => nicknameField.Focus()).StartingIn(100);
     }
 
     // ── Restart ───────────────────────────────────────────────────────────────
