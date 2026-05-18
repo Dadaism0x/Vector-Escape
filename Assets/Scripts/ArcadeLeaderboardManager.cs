@@ -27,16 +27,9 @@ public class ArcadeLeaderboardManager : MonoBehaviour
                 await AuthenticationService.Instance.SignInAnonymouslyAsync();
 
             IsReady = true;
-            Debug.Log($"[Leaderboard] Pronto. Player ID: {AuthenticationService.Instance.PlayerId}");
         }
-        catch (RequestFailedException e)
-        {
-            Debug.LogError($"[Leaderboard] Inizializzazione fallita ({e.ErrorCode}): {e.Message}");
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"[Leaderboard] Errore inatteso: {e.Message}");
-        }
+        catch (RequestFailedException) { }
+        catch (Exception) { }
     }
 
     // ── Nuova sessione ───────────────────────────────────────────────────────
@@ -48,54 +41,32 @@ public class ArcadeLeaderboardManager : MonoBehaviour
         if (AuthenticationService.Instance.IsSignedIn)
             AuthenticationService.Instance.SignOut(clearCredentials: true);
         await AuthenticationService.Instance.SignInAnonymouslyAsync();
-        Debug.Log($"[Leaderboard] Nuova sessione. Player ID: {AuthenticationService.Instance.PlayerId}");
     }
 
     // ── Invio punteggio ──────────────────────────────────────────────────────
 
     public async Task AddScore(string nickname, int score)
     {
-        if (!IsReady)
-        {
-            Debug.LogWarning("[Leaderboard] Servizi non ancora pronti.");
-            return;
-        }
+        if (!IsReady) return;
 
         try
         {
             await NewSessionAsync();
             await AuthenticationService.Instance.UpdatePlayerNameAsync(nickname);
 
-            LeaderboardEntry entry = await LeaderboardsService.Instance
+            await LeaderboardsService.Instance
                 .AddPlayerScoreAsync(leaderboardId, score);
-
-            Debug.Log($"[Leaderboard] Punteggio inviato — {entry.PlayerName}: {entry.Score} (rank {entry.Rank + 1})");
         }
-        catch (RequestFailedException e)
-        {
-            Debug.LogError($"[Leaderboard] Invio fallito ({e.ErrorCode}): {e.Message}");
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"[Leaderboard] Errore inatteso durante l'invio: {e.Message}");
-        }
+        catch (RequestFailedException) { }
+        catch (Exception) { }
     }
 
     // ── Recupero Top 5 ───────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Recupera i primi <paramref name="limit"/> punteggi dalla leaderboard.
-    /// Restituisce una lista vuota in caso di errore di rete.
-    /// </summary>
     public async Task<List<LeaderboardEntryData>> GetTopScores(int limit = 10)
     {
         var results = new List<LeaderboardEntryData>();
-
-        if (!IsReady)
-        {
-            Debug.LogWarning("[Leaderboard] Servizi non ancora pronti.");
-            return results;
-        }
+        if (!IsReady) return results;
 
         try
         {
@@ -113,14 +84,8 @@ public class ArcadeLeaderboardManager : MonoBehaviour
                 });
             }
         }
-        catch (RequestFailedException e)
-        {
-            Debug.LogError($"[Leaderboard] Recupero fallito ({e.ErrorCode}): {e.Message}");
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"[Leaderboard] Errore inatteso durante il recupero: {e.Message}");
-        }
+        catch (RequestFailedException) { }
+        catch (Exception) { }
 
         return results;
     }

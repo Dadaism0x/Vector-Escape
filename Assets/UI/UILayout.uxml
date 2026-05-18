@@ -19,8 +19,11 @@
 
     <ui:VisualElement name="StartOverlay">
         <ui:Label text="VECTOR ESCAPE" name="GameTitle" />
-        <ui:Label text="ENTER YOUR NAME" name="NamePrompt" />
-        <ui:TextField label="" name="NicknameField" max-length="12" />
+        <ui:Label text="YOUR NAME" name="NamePrompt" />
+        <ui:VisualElement name="NameDisplay">
+            <ui:Label text="CosmicFox" name="RandomNameLabel" />
+            <ui:Button text="↻" name="RerollButton" />
+        </ui:VisualElement>
         <ui:Button text="PLAY" name="StartButton" />
     </ui:VisualElement>
 </ui:UXML>

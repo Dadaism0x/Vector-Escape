@@ -34,10 +34,10 @@ public class PlayerController : MonoBehaviour
     private VisualElement root;
     private Label scoreLabel;
     private VisualElement scoreContainer;
-    private VisualElement startOverlay;
-    private TextField nicknameField;
-    private Button startButton;
     private bool gameStarted = false;
+
+    // ── Name input ────────────────────────────────────────────────────────────
+    private NicknameInputHandler nameInputHandler;
 
     // ── Game Over Card ────────────────────────────────────────────────────────
     private VisualElement gameOverOverlay;
@@ -50,13 +50,23 @@ public class PlayerController : MonoBehaviour
     private ArcadeLeaderboardManager arcadeLbManager;
 
     // ── Row color palette ─────────────────────────────────────────────────────
-    static readonly Color RankPink  = new Color(1.00f, 0.71f, 0.75f);
-    static readonly Color RankLilac = new Color(0.78f, 0.69f, 0.94f);
-    static readonly Color RankMint  = new Color(0.67f, 0.90f, 0.80f);
+    static readonly Color[] RankColors =
+    {
+        new Color(1.00f, 0.71f, 0.64f), // #1  corallo soft
+        new Color(1.00f, 0.87f, 0.66f), // #2  giallo sabbia
+        new Color(0.71f, 0.92f, 0.84f), // #3  menta
+        new Color(0.66f, 0.85f, 0.92f), // #4  acqua
+        new Color(0.72f, 0.75f, 1.00f), // #5  lilla cielo
+        new Color(0.79f, 0.72f, 0.91f), // #6  lavanda
+        new Color(0.79f, 0.72f, 0.91f), // #7
+        new Color(0.79f, 0.72f, 0.91f), // #8
+        new Color(0.79f, 0.72f, 0.91f), // #9
+        new Color(0.79f, 0.72f, 0.91f), // #10
+    };
     static readonly Color RankGold  = new Color(1.00f, 0.86f, 0.51f);
     static readonly Color Cream     = new Color(1.00f, 0.95f, 0.87f);
 
-    const int LbRows = 5;
+    const int LbRows = 10;
     bool isCompactLayout = false;
 
     // ── Init ──────────────────────────────────────────────────────────────────
@@ -74,12 +84,12 @@ public class PlayerController : MonoBehaviour
 
         PaletteManager.OnPaletteChanged += OnPaletteChanged;
 
-        arcadeLbManager = FindObjectOfType<ArcadeLeaderboardManager>();
+        arcadeLbManager = FindFirstObjectByType<ArcadeLeaderboardManager>();
 
         moveForward.Enable();
         lookPosition.Enable();
 
-        UIDocument uiDoc = FindObjectOfType<UIDocument>();
+        UIDocument uiDoc = FindFirstObjectByType<UIDocument>();
         if (uiDoc != null)
         {
             root = uiDoc.rootVisualElement;
@@ -104,31 +114,21 @@ public class PlayerController : MonoBehaviour
             if (changeNameButton != null)
                 changeNameButton.clicked += OnChangeNameClicked;
 
-            startOverlay  = root.Q<VisualElement>("StartOverlay");
-            nicknameField = root.Q<TextField>("NicknameField");
-            startButton   = root.Q<Button>("StartButton");
-
-            if (nicknameField != null)
-            {
-                nicknameField.value = PlayerPrefs.GetString("PlayerNickname", "");
-                // TrickleDown: su WebGL l'evento Enter può essere consumato prima di raggiungere il callback normale
-                nicknameField.RegisterCallback<KeyDownEvent>(evt => {
-                    if (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter)
-                        OnStartButtonClicked();
-                }, TrickleDown.TrickleDown);
-            }
-
-            if (startButton != null)
-                startButton.clicked += OnStartButtonClicked;
         }
 
         AdjustLayout();
 
-        string savedNick = PlayerPrefs.GetString("PlayerNickname", "");
-        if (!string.IsNullOrEmpty(savedNick))
+        nameInputHandler = FindFirstObjectByType<NicknameInputHandler>();
+        if (nameInputHandler != null)
         {
-            if (arcadeLbManager != null) arcadeLbManager.PlayerNickname = savedNick;
-            if (startOverlay != null)   startOverlay.style.display   = DisplayStyle.None;
+            nameInputHandler.Initialize(root);
+            nameInputHandler.OnNameConfirmed += HandleNameConfirmed;
+        }
+
+        if (nameInputHandler != null && nameInputHandler.HasSavedNickname)
+        {
+            if (arcadeLbManager != null) arcadeLbManager.PlayerNickname = nameInputHandler.SavedNickname;
+            nameInputHandler.Hide();
             if (scoreContainer != null) scoreContainer.style.display = DisplayStyle.Flex;
             gameStarted = true;
             Time.timeScale = 1f;
@@ -138,7 +138,7 @@ public class PlayerController : MonoBehaviour
         {
             Time.timeScale = 0f;
             Time.fixedDeltaTime = 0f;
-            FocusNicknameField();
+            nameInputHandler?.Show();
         }
     }
 
@@ -282,12 +282,16 @@ public class PlayerController : MonoBehaviour
         if (leaderboardRowsContainer == null) return;
         leaderboardRowsContainer.Clear();
         int count = Mathf.Min(entries.Count, LbRows);
+
+        var cleanedNames = new List<string>(count);
+        for (int i = 0; i < count; i++)
+            cleanedNames.Add(CleanName(entries[i].PlayerName));
+        NicknameInputHandler.SetTakenNames(cleanedNames);
+
         for (int i = 0; i < count; i++)
         {
-            var e = entries[i];
-            string name = CleanName(e.PlayerName);
-            bool isCurrent = name.Equals(currentNick, System.StringComparison.OrdinalIgnoreCase);
-            leaderboardRowsContainer.Add(MakeRow(e.Rank, name, e.Score, isCurrent));
+            bool isCurrent = cleanedNames[i].Equals(currentNick, System.StringComparison.OrdinalIgnoreCase);
+            leaderboardRowsContainer.Add(MakeRow(entries[i].Rank, cleanedNames[i], entries[i].Score, isCurrent));
         }
         for (int i = count; i < LbRows; i++)
             leaderboardRowsContainer.Add(MakeRow(i + 1, "---", 0, false));
@@ -302,9 +306,8 @@ public class PlayerController : MonoBehaviour
         if (isCurrent) row.AddToClassList("lb-row--current");
         if (isCompactLayout) { row.style.minHeight = 18; row.style.marginBottom = 1; }
 
-        Color accent = isCurrent ? RankGold :
-                       rank == 1 ? RankPink  :
-                       rank <= 3 ? RankLilac : RankMint;
+        int colorIdx = Mathf.Clamp(rank - 1, 0, RankColors.Length - 1);
+        Color accent = isCurrent ? RankGold : RankColors[colorIdx];
 
         var rankLabel = new Label(rank.ToString());
         rankLabel.AddToClassList("lb-rank");
@@ -315,12 +318,16 @@ public class PlayerController : MonoBehaviour
 
         var nameLabel = new Label(name);
         nameLabel.AddToClassList("lb-name");
-        if (isEmpty)        nameLabel.style.color = new Color(Cream.r, Cream.g, Cream.b, 0.22f);
-        else if (isCurrent) nameLabel.style.color = RankGold;
+        nameLabel.style.color = isEmpty
+            ? new Color(accent.r, accent.g, accent.b, 0.22f)
+            : accent;
         row.Add(nameLabel);
 
-        var dotsLabel = new Label("· · · · · · · · · · ·");
+        var dotsLabel = new Label("· · · · ·");
         dotsLabel.AddToClassList("lb-dots");
+        dotsLabel.style.flexGrow   = 0;
+        dotsLabel.style.flexShrink = 0;
+        dotsLabel.style.width      = 22;
         row.Add(dotsLabel);
 
         var scoreLabel = new Label(isEmpty ? "--" : score.ToString());
@@ -337,20 +344,15 @@ public class PlayerController : MonoBehaviour
         if (string.IsNullOrEmpty(raw)) return "?";
         int hash = raw.IndexOf('#');
         if (hash > 0) raw = raw.Substring(0, hash);
-        if (raw.Length > 8) raw = raw.Substring(0, 8);
+        if (raw.Length > 12) raw = raw.Substring(0, 11) + "…";
         return raw;
     }
 
-    // ── Start overlay ─────────────────────────────────────────────────────────
+    // ── Name input ───────────────────────────────────────────────────────────
 
-    void OnStartButtonClicked()
+    void HandleNameConfirmed(string nick)
     {
-        string nick = nicknameField != null ? nicknameField.value.Trim() : "Player";
-        if (string.IsNullOrEmpty(nick)) nick = "Player";
-        if (nick.Length > 12) nick = nick.Substring(0, 12);
-
-        PlayerPrefs.SetString("PlayerNickname", nick);
-        PlayerPrefs.Save();
+        if (arcadeLbManager != null) arcadeLbManager.PlayerNickname = nick;
 
         if (isDead)
         {
@@ -360,9 +362,8 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        if (arcadeLbManager != null) arcadeLbManager.PlayerNickname = nick;
-        if (startOverlay != null)   startOverlay.style.display   = DisplayStyle.None;
         if (scoreContainer != null) scoreContainer.style.display = DisplayStyle.Flex;
+        moveForward.Enable();
         gameStarted = true;
         Time.timeScale = 1f;
         Time.fixedDeltaTime = 0.02f;
@@ -370,18 +371,9 @@ public class PlayerController : MonoBehaviour
 
     void OnChangeNameClicked()
     {
-        if (gameOverOverlay != null)  gameOverOverlay.style.display  = DisplayStyle.None;
-        if (scoreContainer != null)   scoreContainer.style.display   = DisplayStyle.None;
-        if (nicknameField != null)    nicknameField.value = PlayerPrefs.GetString("PlayerNickname", "");
-        if (startOverlay != null)     startOverlay.style.display     = DisplayStyle.Flex;
-        FocusNicknameField();
-    }
-
-    void FocusNicknameField()
-    {
-        if (nicknameField == null) return;
-        // Piccolo delay: su WebGL il layout deve essere calcolato prima che Focus() funzioni
-        nicknameField.schedule.Execute(() => nicknameField.Focus()).StartingIn(100);
+        if (gameOverOverlay != null) gameOverOverlay.style.display = DisplayStyle.None;
+        if (scoreContainer  != null) scoreContainer.style.display  = DisplayStyle.None;
+        nameInputHandler?.Show();
     }
 
     // ── Restart ───────────────────────────────────────────────────────────────
@@ -451,7 +443,6 @@ public class PlayerController : MonoBehaviour
         var scoreEl  = root.Q<Label>("FinalScore");
         var lbRowsEl = root.Q<VisualElement>("LeaderboardRows");
 
-        // Detach all children; C# references stay valid for re-parenting
         card.Clear();
 
         card.style.flexDirection = FlexDirection.Row;
@@ -460,18 +451,17 @@ public class PlayerController : MonoBehaviour
         card.style.paddingBottom = isCompactLayout ? 10 : 14;
         card.style.paddingLeft   = isCompactLayout ? 14 : 20;
         card.style.paddingRight  = isCompactLayout ? 14 : 20;
-        card.style.width         = new StyleLength(new Length(90f, LengthUnit.Percent));
-        card.style.maxWidth      = isCompactLayout
-            ? StyleKeyword.None
-            : new StyleLength(400f);
+        card.style.width         = new StyleLength(new Length(92f, LengthUnit.Percent));
+        card.style.maxWidth      = new StyleLength(380f);
 
         // ── Left column: title + score + buttons ──────────────────────────────
         var leftCol = new VisualElement();
         leftCol.style.flexDirection    = FlexDirection.Column;
         leftCol.style.alignItems       = Align.Center;
         leftCol.style.justifyContent   = Justify.Center;
-        leftCol.style.width            = new StyleLength(new Length(44f, LengthUnit.Percent));
-        leftCol.style.paddingRight     = isCompactLayout ? 12 : 16;
+        leftCol.style.width            = new StyleLength(new Length(40f, LengthUnit.Percent));
+        leftCol.style.flexShrink       = 0;
+        leftCol.style.paddingRight     = isCompactLayout ? 10 : 14;
         leftCol.style.borderRightWidth = 1f;
         leftCol.style.borderRightColor = new StyleColor(new Color(0.44f, 0.31f, 0.71f, 0.35f));
 
@@ -482,49 +472,51 @@ public class PlayerController : MonoBehaviour
         }
         if (scoreEl != null)
         {
-            if (isCompactLayout) scoreEl.style.fontSize = 22;
+            scoreEl.style.fontSize     = isCompactLayout ? 20 : 26;
             scoreEl.style.marginBottom = isCompactLayout ? 6 : 8;
             leftCol.Add(scoreEl);
         }
         if (restartButton != null)
         {
-            if (isCompactLayout)
-            {
-                restartButton.style.paddingTop    = 7;
-                restartButton.style.paddingBottom = 7;
-                restartButton.style.paddingLeft   = 16;
-                restartButton.style.paddingRight  = 16;
-            }
-            restartButton.style.marginTop = isCompactLayout ? 2 : 4;
-            restartButton.style.alignSelf = Align.Center;
+            restartButton.style.paddingTop    = isCompactLayout ? 6 : 8;
+            restartButton.style.paddingBottom = isCompactLayout ? 6 : 8;
+            restartButton.style.paddingLeft   = isCompactLayout ? 8 : 10;
+            restartButton.style.paddingRight  = isCompactLayout ? 8 : 10;
+            restartButton.style.marginTop     = isCompactLayout ? 2 : 4;
+            restartButton.style.alignSelf     = Align.Center;
             leftCol.Add(restartButton);
         }
         if (changeNameButton != null)
         {
-            if (isCompactLayout)
-            {
-                changeNameButton.style.paddingTop    = 4;
-                changeNameButton.style.paddingBottom = 4;
-                changeNameButton.style.paddingLeft   = 8;
-                changeNameButton.style.paddingRight  = 8;
-                changeNameButton.style.fontSize      = 9;
-            }
+            changeNameButton.style.paddingTop    = 4;
+            changeNameButton.style.paddingBottom = 4;
+            changeNameButton.style.paddingLeft   = isCompactLayout ? 6 : 8;
+            changeNameButton.style.paddingRight  = isCompactLayout ? 6 : 8;
+            if (isCompactLayout) changeNameButton.style.fontSize = 9;
             changeNameButton.style.marginTop = isCompactLayout ? 3 : 5;
             leftCol.Add(changeNameButton);
         }
 
-        // ── Right column: leaderboard rows ────────────────────────────────────
+        // ── Right column: scrollable leaderboard ──────────────────────────────
         var rightCol = new VisualElement();
         rightCol.style.flexDirection  = FlexDirection.Column;
         rightCol.style.flexGrow       = 1;
-        rightCol.style.paddingLeft    = isCompactLayout ? 12 : 16;
+        rightCol.style.paddingLeft    = isCompactLayout ? 10 : 14;
         rightCol.style.justifyContent = Justify.Center;
+
+        var scroll = new ScrollView(ScrollViewMode.Vertical);
+        scroll.style.flexShrink  = 0;
+        scroll.style.height      = new StyleLength(isCompactLayout ? 110f : 155f);
+        scroll.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
+        scroll.verticalScrollerVisibility   = ScrollerVisibility.Hidden;
 
         if (lbRowsEl != null)
         {
             lbRowsEl.style.marginBottom = 0;
-            rightCol.Add(lbRowsEl);
+            lbRowsEl.style.alignSelf    = Align.Stretch;
+            scroll.Add(lbRowsEl);
         }
+        rightCol.Add(scroll);
 
         card.Add(leftCol);
         card.Add(rightCol);
@@ -554,11 +546,10 @@ public class PlayerController : MonoBehaviour
         float height = Camera.main.orthographicSize;
         float width  = height * Camera.main.aspect;
 
-        bool wrapped = false;
-        if      (pos.x >  width)  { pos.x = -width;  wrapped = true; }
-        else if (pos.x < -width)  { pos.x =  width;  wrapped = true; }
-        if      (pos.y >  height) { pos.y = -height; wrapped = true; }
-        else if (pos.y < -height) { pos.y =  height; wrapped = true; }
+        if      (pos.x >  width)  pos.x = -width;
+        else if (pos.x < -width)  pos.x =  width;
+        if      (pos.y >  height) pos.y = -height;
+        else if (pos.y < -height) pos.y =  height;
 
         transform.position = pos;
     }

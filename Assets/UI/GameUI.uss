@@ -265,17 +265,11 @@
     margin-bottom: 14px;
 }
 
-#NicknameField {
+#NameDisplay {
     width: 60%;
     max-width: 160px;
-    margin-bottom: 14px;
-}
-
-#NicknameField .unity-label {
-    display: none;
-}
-
-#NicknameField .unity-base-text-field__input {
+    flex-direction: row;
+    align-items: center;
     background-color: rgba(18, 10, 38, 0.88);
     border-left-color: rgb(160, 120, 240);
     border-right-color: rgb(160, 120, 240);
@@ -289,14 +283,43 @@
     border-top-right-radius: 8px;
     border-bottom-right-radius: 8px;
     border-bottom-left-radius: 8px;
-    color: rgb(210, 185, 255);
-    font-size: 14px;
-    -unity-font-style: bold;
-    -unity-text-align: middle-center;
     padding-left: 12px;
-    padding-right: 12px;
+    padding-right: 4px;
     padding-top: 8px;
     padding-bottom: 8px;
+    margin-bottom: 14px;
+}
+
+#RandomNameLabel {
+    flex-grow: 1;
+    font-size: 14px;
+    -unity-font-style: bold;
+    color: rgb(210, 185, 255);
+    -unity-text-align: middle-center;
+}
+
+#RerollButton {
+    background-color: rgba(0, 0, 0, 0);
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    color: rgba(180, 145, 225, 0.60);
+    font-size: 16px;
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    transition-property: color;
+    transition-duration: 0.12s;
+}
+
+#RerollButton:hover {
+    color: rgba(210, 185, 255, 0.90);
+}
+
+#RerollButton:active {
+    color: rgba(150, 110, 220, 1.0);
 }
 
 #StartButton {
