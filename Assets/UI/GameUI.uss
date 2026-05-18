@@ -51,7 +51,8 @@
 }
 
 #GameOverCard {
-    width: 260px;
+    width: 90%;
+    max-width: 260px;
     flex-direction: column;
     background-color: rgba(5, 2, 13, 0.97);
     border-top-left-radius: 14px;
@@ -265,7 +266,8 @@
 }
 
 #NicknameField {
-    width: 160px;
+    width: 60%;
+    max-width: 160px;
     margin-bottom: 14px;
 }
 

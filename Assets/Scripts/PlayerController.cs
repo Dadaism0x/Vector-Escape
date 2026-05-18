@@ -56,6 +56,9 @@ public class PlayerController : MonoBehaviour
     static readonly Color RankGold  = new Color(1.00f, 0.86f, 0.51f);
     static readonly Color Cream     = new Color(1.00f, 0.95f, 0.87f);
 
+    const int LbRows = 5;
+    bool isCompactLayout = false;
+
     // ── Init ──────────────────────────────────────────────────────────────────
 
     void Start()
@@ -118,11 +121,13 @@ public class PlayerController : MonoBehaviour
                 startButton.clicked += OnStartButtonClicked;
         }
 
+        AdjustLayout();
+
         string savedNick = PlayerPrefs.GetString("PlayerNickname", "");
         if (!string.IsNullOrEmpty(savedNick))
         {
             if (arcadeLbManager != null) arcadeLbManager.PlayerNickname = savedNick;
-            if (startOverlay != null)  startOverlay.style.display  = DisplayStyle.None;
+            if (startOverlay != null)   startOverlay.style.display   = DisplayStyle.None;
             if (scoreContainer != null) scoreContainer.style.display = DisplayStyle.Flex;
             gameStarted = true;
             Time.timeScale = 1f;
@@ -262,8 +267,6 @@ public class PlayerController : MonoBehaviour
 
     // ── Leaderboard rows ──────────────────────────────────────────────────────
 
-    const int LbRows = 3;
-
     void ShowPlaceholders()
     {
         if (leaderboardRowsContainer == null) return;
@@ -295,6 +298,7 @@ public class PlayerController : MonoBehaviour
         var row = new VisualElement();
         row.AddToClassList("lb-row");
         if (isCurrent) row.AddToClassList("lb-row--current");
+        if (isCompactLayout) { row.style.minHeight = 18; row.style.marginBottom = 1; }
 
         Color accent = isCurrent ? RankGold :
                        rank == 1 ? RankPink  :
@@ -309,7 +313,7 @@ public class PlayerController : MonoBehaviour
 
         var nameLabel = new Label(name);
         nameLabel.AddToClassList("lb-name");
-        if (isEmpty)       nameLabel.style.color = new Color(Cream.r, Cream.g, Cream.b, 0.22f);
+        if (isEmpty)        nameLabel.style.color = new Color(Cream.r, Cream.g, Cream.b, 0.22f);
         else if (isCurrent) nameLabel.style.color = RankGold;
         row.Add(nameLabel);
 
@@ -319,7 +323,7 @@ public class PlayerController : MonoBehaviour
 
         var scoreLabel = new Label(isEmpty ? "--" : score.ToString());
         scoreLabel.AddToClassList("lb-score");
-        if (isEmpty)       scoreLabel.style.color = new Color(Cream.r, Cream.g, Cream.b, 0.22f);
+        if (isEmpty)        scoreLabel.style.color = new Color(Cream.r, Cream.g, Cream.b, 0.22f);
         else if (isCurrent) scoreLabel.style.color = RankGold;
         row.Add(scoreLabel);
 
@@ -348,22 +352,15 @@ public class PlayerController : MonoBehaviour
 
         if (isDead)
         {
-            // Chiamato da "Change Name" dopo la morte — ricarica la scena
             Time.timeScale = 1f;
             Time.fixedDeltaTime = 0.02f;
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
             return;
         }
 
-        if (arcadeLbManager != null)
-            arcadeLbManager.PlayerNickname = nick;
-
-        if (startOverlay != null)
-            startOverlay.style.display = DisplayStyle.None;
-
-        if (scoreContainer != null)
-            scoreContainer.style.display = DisplayStyle.Flex;
-
+        if (arcadeLbManager != null) arcadeLbManager.PlayerNickname = nick;
+        if (startOverlay != null)   startOverlay.style.display   = DisplayStyle.None;
+        if (scoreContainer != null) scoreContainer.style.display = DisplayStyle.Flex;
         gameStarted = true;
         Time.timeScale = 1f;
         Time.fixedDeltaTime = 0.02f;
@@ -428,6 +425,101 @@ public class PlayerController : MonoBehaviour
         shipShape.SetColor(target);
     }
 
+    // ── Mobile layout ─────────────────────────────────────────────────────────
+
+    void AdjustLayout()
+    {
+        if (root == null) return;
+        float dpi = Screen.dpi > 0f ? Screen.dpi : 96f;
+        float cssH = Screen.height * 96f / dpi;
+        isCompactLayout = cssH < 400f;
+
+        var card = root.Q<VisualElement>("GameOverCard");
+        if (card == null) return;
+
+        var titleEl  = root.Q<Label>("GameOverTitle");
+        var scoreEl  = root.Q<Label>("FinalScore");
+        var lbRowsEl = root.Q<VisualElement>("LeaderboardRows");
+
+        // Detach all children; C# references stay valid for re-parenting
+        card.Clear();
+
+        card.style.flexDirection = FlexDirection.Row;
+        card.style.alignItems    = Align.Stretch;
+        card.style.paddingTop    = isCompactLayout ? 10 : 14;
+        card.style.paddingBottom = isCompactLayout ? 10 : 14;
+        card.style.paddingLeft   = isCompactLayout ? 14 : 20;
+        card.style.paddingRight  = isCompactLayout ? 14 : 20;
+        card.style.width         = new StyleLength(new Length(90f, LengthUnit.Percent));
+        card.style.maxWidth      = isCompactLayout
+            ? StyleKeyword.None
+            : new StyleLength(400f);
+
+        // ── Left column: title + score + buttons ──────────────────────────────
+        var leftCol = new VisualElement();
+        leftCol.style.flexDirection    = FlexDirection.Column;
+        leftCol.style.alignItems       = Align.Center;
+        leftCol.style.justifyContent   = Justify.Center;
+        leftCol.style.width            = new StyleLength(new Length(44f, LengthUnit.Percent));
+        leftCol.style.paddingRight     = isCompactLayout ? 12 : 16;
+        leftCol.style.borderRightWidth = 1f;
+        leftCol.style.borderRightColor = new StyleColor(new Color(0.44f, 0.31f, 0.71f, 0.35f));
+
+        if (titleEl != null)
+        {
+            titleEl.style.marginBottom = 0;
+            leftCol.Add(titleEl);
+        }
+        if (scoreEl != null)
+        {
+            if (isCompactLayout) scoreEl.style.fontSize = 22;
+            scoreEl.style.marginBottom = isCompactLayout ? 6 : 8;
+            leftCol.Add(scoreEl);
+        }
+        if (restartButton != null)
+        {
+            if (isCompactLayout)
+            {
+                restartButton.style.paddingTop    = 7;
+                restartButton.style.paddingBottom = 7;
+                restartButton.style.paddingLeft   = 16;
+                restartButton.style.paddingRight  = 16;
+            }
+            restartButton.style.marginTop = isCompactLayout ? 2 : 4;
+            restartButton.style.alignSelf = Align.Center;
+            leftCol.Add(restartButton);
+        }
+        if (changeNameButton != null)
+        {
+            if (isCompactLayout)
+            {
+                changeNameButton.style.paddingTop    = 4;
+                changeNameButton.style.paddingBottom = 4;
+                changeNameButton.style.paddingLeft   = 8;
+                changeNameButton.style.paddingRight  = 8;
+                changeNameButton.style.fontSize      = 9;
+            }
+            changeNameButton.style.marginTop = isCompactLayout ? 3 : 5;
+            leftCol.Add(changeNameButton);
+        }
+
+        // ── Right column: leaderboard rows ────────────────────────────────────
+        var rightCol = new VisualElement();
+        rightCol.style.flexDirection  = FlexDirection.Column;
+        rightCol.style.flexGrow       = 1;
+        rightCol.style.paddingLeft    = isCompactLayout ? 12 : 16;
+        rightCol.style.justifyContent = Justify.Center;
+
+        if (lbRowsEl != null)
+        {
+            lbRowsEl.style.marginBottom = 0;
+            rightCol.Add(lbRowsEl);
+        }
+
+        card.Add(leftCol);
+        card.Add(rightCol);
+    }
+
     // ── UI Toolkit helpers ────────────────────────────────────────────────────
 
     IEnumerator BounceButton(VisualElement el)
@@ -452,10 +544,11 @@ public class PlayerController : MonoBehaviour
         float height = Camera.main.orthographicSize;
         float width  = height * Camera.main.aspect;
 
-        if (pos.x >  width)  pos.x = -width;
-        else if (pos.x < -width)  pos.x =  width;
-        if (pos.y >  height) pos.y = -height;
-        else if (pos.y < -height) pos.y =  height;
+        bool wrapped = false;
+        if      (pos.x >  width)  { pos.x = -width;  wrapped = true; }
+        else if (pos.x < -width)  { pos.x =  width;  wrapped = true; }
+        if      (pos.y >  height) { pos.y = -height; wrapped = true; }
+        else if (pos.y < -height) { pos.y =  height; wrapped = true; }
 
         transform.position = pos;
     }
