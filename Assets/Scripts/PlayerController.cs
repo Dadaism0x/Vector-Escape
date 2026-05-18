@@ -67,7 +67,7 @@ public class PlayerController : MonoBehaviour
     static readonly Color RankGold  = new Color(1.00f, 0.86f, 0.51f);
     static readonly Color Cream     = new Color(1.00f, 0.95f, 0.87f);
 
-    const int LbRows = 10;
+    const int LbRows = 5;
     bool isCompactLayout = false;
 
     // ── Init ──────────────────────────────────────────────────────────────────
